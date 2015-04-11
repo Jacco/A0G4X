@@ -51,7 +51,7 @@ class Drone():
 
     L = 0.18  # distance between prop and COG in m
     m = 0.4365  # mass of the drone in kg, for hovering 5.8 A
-    g = 9.81  # gm/s^2
+    g = 0 # gm/s^2
     I = np.array([[2.5730480633e-8, 0, 0],
                   [0, 2.573048063300000e-8, 0],
                   [0, 0, 2.573048063300000e-5]])  # inertia matrix of the drone in gm3

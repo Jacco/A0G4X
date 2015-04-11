@@ -6,12 +6,13 @@ class InternalCode:
         self.simulator = simulator
         
         initial_state = State()
+        #initial_state.position[2] = 1
         measurement_delay = 40 if self.enable_delay else 1
         self.state = [self.copy_state(initial_state) for i in range(measurement_delay)]
         self.state_desired = State()
         
         if self.setpoint == 'fix':
-            self.state_desired.position[0] = 1
+            self.state_desired.position[0] = 0
             self.state_desired.position[2] = 0.5
         elif self.setpoint == 'random':
             self.state_desired.position = np.random.random((3,1))

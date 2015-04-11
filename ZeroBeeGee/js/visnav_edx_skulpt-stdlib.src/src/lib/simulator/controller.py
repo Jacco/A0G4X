@@ -173,8 +173,8 @@ class Controller():
         #print "body", body_angular_vel.transpose()
 
         rates = np.array([
-            [self.Kp_ang_vel * (-body_acc_cmd.item(1) / self.drone.g) - self.Kd_ang_vel * body_angular_vel.item(0)],
-            [self.Kp_ang_vel * (body_acc_cmd.item(0) / self.drone.g) - self.Kd_ang_vel * body_angular_vel.item(1)],
+            [0],
+            [0],
             [self.Kp_yaw_vel * (yawdot_desired - self.drone.thetadot.item(2))]
         ]);
 
