@@ -259,6 +259,7 @@
     <Content Include="static\exercise4_quadrotor\internal.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="static\exercise4_quadrotor\stdlib-demin.py" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
