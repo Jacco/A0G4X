@@ -357,6 +357,8 @@
     <Content Include="v4\js\three\TrackballControls.js" />
     <Content Include="v4\js\visnav_edx_skulpt-stdlib.js" />
     <Content Include="v4\js\visnav_edx_skulpt.min.js" />
+    <Content Include="v4\static\exercise7_visual_odometry\default.py" />
+    <Content Include="v4\static\exercise7_visual_odometry\internal.py" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
