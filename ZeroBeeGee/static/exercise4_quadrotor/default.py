@@ -11,11 +11,11 @@ class UserCode:
     
         # xy control gains
         Kp_xy = 1.8 # xy proportional
-        Kd_xy = 1.0 # xy differential
+        Kd_xy = 3.0 # xy differential
         
         # height control gains
-        Kp_z  = 0.8 # z proportional
-        Kd_z  = 0.8 # z differential
+        Kp_z  = 1.8 # z proportional
+        Kd_z  = 3.0 # z differential
         
         self.Kp = np.array([[Kp_xy, Kp_xy, Kp_z]]).T
         self.Kd = np.array([[Kd_xy, Kd_xy, Kd_z]]).T
@@ -36,7 +36,6 @@ class UserCode:
         
         # TODO: implement PID controller computing u from state and state_desired
         u = pv + dv
-        
         return u
         
     def plot(self, position, position_desired):

@@ -155,15 +155,17 @@ class Controller():
         self.Kp_zvelocity    = 5.0
 
         self.Kp_lin_vel = np.array([[5.0], [5.0], [5.0]])
-        self.Kd_lin_vel = np.array([[2.5], [2.5], [0]])
+        self.Kd_lin_vel = np.array([[5.0], [5.0], [5.0]])
 
         self.Kp_ang_vel = 10.0
         self.Kd_ang_vel = 5.0
 
         self.Kp_yaw_vel = 1.0
 
+    def clamp(self, value, limit):
+        return max(min(value, limit), -limit)
 
-    def calculate_control_command3(self,dt,xdot_desired, yawdot_desired):
+    def calculate_control_command3(self,dt,xdot_desired, yawdot_desired, theta_desired, x_desired):
 
         world_acc_cmd    = self.Kp_lin_vel * (xdot_desired - self.drone.xdot) - self.Kd_lin_vel * self.drone.xdoubledot;
         world_acc_cmd[2] = world_acc_cmd.item(2) + self.drone.g# / (math.cos(self.drone.theta.item(1))*math.cos(self.drone.theta.item(0)))
@@ -172,13 +174,37 @@ class Controller():
         body_angular_vel = self.drone.omega#np.dot(self.drone.angle_rotation_to_body(), self.drone.thetadot)
         #print "body", body_angular_vel.transpose()
 
+        Kp_roll = 0.8
+        Kd_roll = 1.8
+        Kp_pitch = 0.8
+        Kd_pitch = 1.8
+
+        e_roll  = Kp_roll * (theta_desired.item(0) - self.drone.theta.item(0)) + Kd_roll * ( - self.drone.thetadot.item(0))
+        e_roll  = -e_roll
+        e_pitch = Kp_pitch * (theta_desired.item(1) - self.drone.theta.item(1)) + Kd_pitch * ( - self.drone.thetadot.item(1))
+        e_pitch = -e_pitch
+
+        ad = x_desired - self.drone.x
+        al = math.sqrt(ad.item(0)*ad.item(0) + ad.item(1)*ad.item(1) + ad.item(2)*ad.item(2))
+        #print x_desired, self.drone.x
+        print al
+        if (al < 0.15):
+            e_roll = 0
+
+        #print theta_desired.item(1), self.drone.theta.item(1), self.drone.thetadot.item(1)
+        #print self.drone.thetadot
+
         rates = np.array([
-            [0],
+            [-e_roll],
             [0],
             [self.Kp_yaw_vel * (yawdot_desired - self.drone.thetadot.item(2))]
         ]);
 
-        T_des = world_acc_cmd.item(2) / (math.cos(self.drone.theta.item(1)) * math.cos(self.drone.theta.item(0)))
+        T_des = 0 #world_acc_cmd.item(0) + world_acc_cmd.item(1) + world_acc_cmd.item(2)
+        ad = theta_desired - self.drone.theta #math.acos(self.clamp(np.dot(theta_desired.transpose(), self.drone.theta).item(0), 1))
+        al = math.sqrt(ad.item(0)*ad.item(0) + ad.item(1)*ad.item(1) + ad.item(2)*ad.item(2))
+        if (abs(al) < 0.01):
+            T_des = 0.01 * body_acc_cmd.item(2) #world_acc_cmd.item(0) + world_acc_cmd.item(1) + world_acc_cmd.item(2)
         rates = np.vstack((rates, T_des))
         ctrl  = np.dot(self.drone.AinvKinvI, rates)
         return ctrl, world_acc_cmd

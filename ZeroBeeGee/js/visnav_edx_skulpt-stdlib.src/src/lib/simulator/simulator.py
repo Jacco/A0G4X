@@ -1,6 +1,7 @@
 import sys
 import math
 import numpy as np  # for cross, inv, random, arange
+
 #from simulator.navdata import Navdata
 
 if(sys.platform != "skulpt"):
@@ -85,14 +86,55 @@ class Simulator():
         self.xdot_desired[2]     = sim_input[3];
         self.xdot_desired        = np.dot(self.drone.yaw_rotation(), self.xdot_desired)
 
-    def set_input_world(self, lin_vel, yaw_vel):
+    def project_onto_plane(self, x, n):
+        return x-np.dot(x.transpose(),n).item(0)*n
+
+    def clamp(self, value, limit):
+        return max(min(value, limit), -limit)
+
+    def set_input_world(self, lin_vel, yaw_vel, state_desired):
         self.xdot_desired[0]     = lin_vel[0]
         self.xdot_desired[1]     = lin_vel[1]
         self.xdot_desired[2]     = lin_vel[2]
         self.thetadot_desired[2] = yaw_vel;
+        zd = np.dot(self.drone.rotation().transpose(), np.array([[0.0],[0.0],[1.0]]))
+        yd = np.dot(self.drone.rotation().transpose(), np.array([[0.0],[1.0],[0.0]]))
+        xd = np.dot(self.drone.rotation().transpose(), np.array([[1.0],[0.0],[0.0]]))
+        #print zd
+        dd = state_desired.position - self.drone.x
+        dl = math.sqrt(dd.item(0)*dd.item(0) + dd.item(1)*dd.item(1) + dd.item(2)*dd.item(2))
+        if (dl > 0.0001):
+            dd[0] = dd[0] / dl
+            dd[1] = dd[1] / dl
+            dd[2] = dd[2] / dl
+
+            projx = self.project_onto_plane(dd, xd)
+            projy = self.project_onto_plane(dd, yd)
+
+            dl = math.sqrt(projx.item(0)*projx.item(0) + projx.item(1)*projx.item(1) + projx.item(2)*projx.item(2))
+            projx = projx / dl
+            dl = math.sqrt(projy.item(0)*projy.item(0) + projy.item(1)*projy.item(1) + projy.item(2)*projy.item(2))
+            projy = projy / dl
+
+            #print projx, projy
+            angx = math.acos(self.clamp(np.dot(zd.transpose(), projx).item(0), 1))
+            angy = math.acos(self.clamp(np.dot(zd.transpose(), projy).item(0), 1))
+
+            self.theta_desired[0] = self.drone.theta.item(0) + angx
+            self.theta_desired[1] = self.drone.theta.item(1) + angy
+
+            self.x_desired = state_desired.position
+            #print angx
+            #print ang
+            #print "Theta"
+            #print self.theta_desired        
+            #print "set_input_world"
+
 
     def simulate_step(self, t, dt):
         self.step_count += 1
+
+
 
         #if(int(t / 8.0) % 2 == 0):
         #    self.xdot_desired[0] = 0.75;
@@ -104,7 +146,7 @@ class Simulator():
 
 
         #inputCurrents = self.controller.calculate_control_command(dt, self.theta_desired, self.thetadot_desired,self.x_desired,self.xdot_desired)
-        inputCurrents, acc = self.controller.calculate_control_command3(dt, self.xdot_desired, self.thetadot_desired.item(2))
+        inputCurrents, acc = self.controller.calculate_control_command3(dt, self.xdot_desired, self.thetadot_desired.item(2), self.theta_desired, self.x_desired)
         omega = self.drone.omega;#thetadot_in_body()  # calculate current angular velocity in body frame
 
         #torques_thrust      = self.drone.torques_thrust(np.array([inputCurrents]).transpose())

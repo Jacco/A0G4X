@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class InternalCode:
     
@@ -12,7 +13,8 @@ class InternalCode:
         self.state_desired = State()
         
         if self.setpoint == 'fix':
-            self.state_desired.position[0] = 0
+            self.state_desired.position[0] = 0.0
+            self.state_desired.position[1] = 0.0
             self.state_desired.position[2] = 0.5
         elif self.setpoint == 'random':
             self.state_desired.position = np.random.random((3,1))
@@ -68,4 +70,9 @@ class InternalCode:
         plot_trajectory("integrated", current.position)
         lin_vel = self.user.compute_control_command(t, dt, current, self.copy_state(self.state_desired))
         
-        self.simulator.set_input_world(lin_vel, 0)
+        ad = current.position - self.state_desired.position
+        al = math.sqrt(ad.item(0)*ad.item(0) + ad.item(1)*ad.item(1) + ad.item(2)*ad.item(2))
+        if (al < 0.15):
+            self.state_desired.position[1] = 3
+
+        self.simulator.set_input_world(lin_vel, 0, self.state_desired)
